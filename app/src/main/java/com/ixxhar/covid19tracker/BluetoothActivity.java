@@ -63,7 +63,7 @@ public class BluetoothActivity extends AppCompatActivity {
                 if (device.getName() != null && device.getName().startsWith("-")) {
                     deviceModel = new DeviceModel();
                     deviceModel.setDeviceID(device.getName());
-                    deviceModel.setLoggedTime(java.text.DateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime()));
+                    deviceModel.setLoggedTime(String.valueOf(Calendar.getInstance().getTime()));
                     nearbyDeviceModelArrayList.add(deviceModel);
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
@@ -151,6 +151,14 @@ public class BluetoothActivity extends AppCompatActivity {
                     bluetoothAdapter.startDiscovery();  //This function is self explanatory, it basically start the intent which we describe above
                 }
             });
+
+            findViewById(R.id.sendDataActivityLauncher).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(getApplicationContext(), SendDataActivity.class));
+                }
+            });
+
         } else {
             startActivity(new Intent(this, AuthenticationActivity.class));
             finish();
