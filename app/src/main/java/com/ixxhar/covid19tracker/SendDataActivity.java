@@ -1,6 +1,10 @@
 package com.ixxhar.covid19tracker;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +21,8 @@ import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
 import java.io.File;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 public class SendDataActivity extends AppCompatActivity {
@@ -30,6 +36,8 @@ public class SendDataActivity extends AppCompatActivity {
     private File file;
 
     private NearByDeviceDBHelper nearByDeviceDBHelper;
+
+    private static final int MY_PERMISSIONS_REQUEST_READ_WRITE_STORAGE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +54,14 @@ public class SendDataActivity extends AppCompatActivity {
             findViewById(R.id.sendData_B).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    deleteGeneratedCSVFile();
-                    generateCSVFileFromSQLiteDB();
-                    sendCSVviaEmail();
+                    boolean granted = checkReadWritePermission();
+                    if (granted) {
+                        deleteGeneratedCSVFile();
+                        generateCSVFileFromSQLiteDB();
+                        sendCSVviaEmail();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Grant Permission", Toast.LENGTH_SHORT).show();
+                    }
 
                 }
             });
@@ -115,6 +128,46 @@ public class SendDataActivity extends AppCompatActivity {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public boolean checkReadWritePermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                new AlertDialog.Builder(this)
+                        .setTitle("Permission Required")
+                        .setMessage("In order for this application to work properly, we need the following permission.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //Prompt the user once explanation has been shown
+                                ActivityCompat.requestPermissions(SendDataActivity.this,
+                                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        MY_PERMISSIONS_REQUEST_READ_WRITE_STORAGE);
+                            }
+                        })
+                        .create()
+                        .show();
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_WRITE_STORAGE);
+            }
+            return false;
+        } else {
+            return true;
         }
     }
 }

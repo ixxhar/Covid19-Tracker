@@ -304,7 +304,7 @@ public class BluetoothActivity extends AppCompatActivity {
                 // sees the explanation, try again to request the permission.
                 new AlertDialog.Builder(this)
                         .setTitle("Permission Required")
-                        .setMessage("In order for this application to work properly, we need this permission.")
+                        .setMessage("In order for this application to work properly, we need the following permission.")
                         .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
