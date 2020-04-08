@@ -1,5 +1,5 @@
 # Covid19-Tracker
-*A bluetooth proximity application for keeping record of individuals in contact.*
+*A bluetooth proximity tracing application for keeping record of contacts, to detect and isolate corona patients.*
 
 
 ## Following features have been currently implemented
