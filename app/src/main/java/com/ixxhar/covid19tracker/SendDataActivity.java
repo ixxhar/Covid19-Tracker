@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -11,15 +12,22 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.ixxhar.covid19tracker.helperclass.CSVFileWriter;
 import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
 
 import java.io.File;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -39,6 +47,12 @@ public class SendDataActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_READ_WRITE_STORAGE = 1;
 
+    private static final String MY_PREFS_NAME = "MyPrefsFile";  // This here is a constant used for Shared Preferences,
+    private Button sendDataButton;
+    private String USER_ID;
+    private DatabaseReference databaseReference;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,9 +63,35 @@ public class SendDataActivity extends AppCompatActivity {
         currentUser = firebaseAuth.getCurrentUser();
         // This here is the initilization of firebase services,
 
+        sendDataButton = (Button) findViewById(R.id.sendData_B);
+        sendDataButton.setVisibility(View.INVISIBLE);
+
+        //This here is the code for getting data of logged in user
+        SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+
+        USER_ID = prefs.getString("userid", null); //0 is the default value. //This here is the code for getting data of logged in user id
+
         if (currentUser != null) {
 
-            findViewById(R.id.sendData_B).setOnClickListener(new View.OnClickListener() {
+            databaseReference = FirebaseDatabase.getInstance().getReference();
+            databaseReference.child("Users").child(USER_ID).child("sendDataPermission").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Log.d(TAG, "onDataChange: " + dataSnapshot.getValue());
+                    if (dataSnapshot.getValue().equals("true")) {
+                        sendDataButton.setVisibility(View.VISIBLE);
+                    } else {
+                        sendDataButton.setVisibility(View.INVISIBLE);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+            sendDataButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     boolean granted = checkReadWritePermission();

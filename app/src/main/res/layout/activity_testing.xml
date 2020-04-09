@@ -7,7 +7,7 @@
     tools:context=".TestingActivity">
 
     <EditText
-        android:id="@+id/testPhone_ET"
+        android:id="@+id/editTextOne_ET"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="35dp"
@@ -18,37 +18,37 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/testSubmit_B"
+        android:id="@+id/one_B"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="44dp"
-        android:text="Button"
+        android:text="One"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/testPhone_ET" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextOne_ET" />
 
     <Button
-        android:id="@+id/sendEmail_B"
+        android:id="@+id/two_B"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="copy"
+        android:text="two"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/testSubmit_B" />
+        app:layout_constraintTop_toBottomOf="@+id/one_B" />
 
     <Button
-        android:id="@+id/get_B"
+        android:id="@+id/three_B"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="Get from DB"
+        android:text="three"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sendEmail_B" />
+        app:layout_constraintTop_toBottomOf="@+id/two_B" />
 
     <TextView
-        android:id="@+id/txtData"
+        android:id="@+id/textViewOne_TV"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="24dp"
@@ -56,8 +56,9 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
         android:scrollbars="vertical"
+        android:text="test text view"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/get_B" />
+        app:layout_constraintTop_toBottomOf="@+id/three_B" />
 </androidx.constraintlayout.widget.ConstraintLayout>

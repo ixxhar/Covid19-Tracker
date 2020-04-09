@@ -3,13 +3,8 @@ package com.ixxhar.covid19tracker;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -21,11 +16,7 @@ import android.widget.Toast;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
-import com.ixxhar.covid19tracker.modelclass.DeviceModel;
-import com.ixxhar.covid19tracker.modelclass.UserModel;
-
-import java.util.ArrayList;
-import java.util.Calendar;
+import com.ixxhar.covid19tracker.serviceclass.BluetoothService;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,44 +25,16 @@ import androidx.core.content.ContextCompat;
 
 public class BluetoothActivity extends AppCompatActivity {
     private static final String TAG = "BluetoothActivity";
-    private static final String MY_PREFS_NAME = "MyPrefsFile";  // This here is a constant used for Shared Preferences,
-    //This here are the constants for permission dialog,
-    private static final int REQUEST_ENABLE_BT = 1;                         //Enable bluetooth request variable
-    private static final int REQUEST_DISCOVERABILITY = 1;                  //Make bluetooth discoverable request variable
-    // This here is the initilization of firebase services,
+
+    private static final int REQUEST_ENABLE_BT = 1;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
-    ArrayList<DeviceModel> nearbyDeviceModelArrayList;  //This here is an array which is used for storing nearby devices that are found by Bluetooth.
-    UserModel currentUserModel; //This here is the instantiation of user model class, which is used from the logged in user data.
-    // This here is the initilization of firebase services,
+
     private FirebaseAuth firebaseAuth;
-    //This here are the constants for permission dialog,
     private FirebaseUser currentUser;
     private BluetoothAdapter bluetoothAdapter;  //This here is instantiation of bluetooth adapter,
     private NearByDeviceDBHelper nearByDeviceDBHelper;  //class responsible for creating local database
 
     private TextView txtDataTest;   //test
-    //This method is all about bluetooth, here it is filtering out devices whose type is 2, and assigning them to the array mentioned above, and calling a method to update firebase realtime db
-    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals((action))) {    //This check the intent whether it has found a device or not
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                DeviceModel deviceModel;
-                Log.d(TAG, "ACTION_FOUND: " + device.getName() + " " + device.getAddress() + " " + device.getType());
-
-                if (device.getName() != null && device.getName().startsWith("-")) {
-                    deviceModel = new DeviceModel();
-                    deviceModel.setDeviceID(device.getName());
-                    deviceModel.setLoggedTime(String.valueOf(Calendar.getInstance().getTime()));
-                    nearbyDeviceModelArrayList.add(deviceModel);
-                }
-            } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                Log.d(TAG, "onReceive: ACTION_DISCOVERY_FINISHED " + nearbyDeviceModelArrayList.size()); //This checks whether the scanning is finished.
-                updateNearbyList();
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,32 +48,15 @@ public class BluetoothActivity extends AppCompatActivity {
         currentUser = firebaseAuth.getCurrentUser();
         // This here is the initilization of firebase services,
 
-        txtDataTest = findViewById(R.id.txtData);
+        txtDataTest = findViewById(R.id.textViewOne_TV);
 
         if (currentUser != null) {
-
-            //This here is the code for getting data of logged in user
-            SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
-            String userphone = prefs.getString("userphone", null);//"No name defined" is the default value.
-            String userid = prefs.getString("userid", null); //0 is the default value.
-            //This here is the code for getting data of logged in user
-
-            Log.d(TAG, "onCreate: userphone " + userphone + " userid " + userid); // getting logged in user data.
-
-            //This here is the instantiation of user model class, which is used from the logged in user data.
-            currentUserModel = new UserModel();
-            currentUserModel.setUserID(userid);
-            currentUserModel.setUserPhoneNumber(userphone);
-            //This here is the instantiation of user model class, which is used from the logged in user data.
 
             //This here is the code for asking user for Location Permission
             checkLocationPermission();
 
-            //This here is the code for asking user for Location Permission
-
             //This here the code is for bluetooth initialization
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            bluetoothAdapter.setName(currentUserModel.getUserID());   //here I have to assign a unique identifier to be linked with the number
 
             // Phone does not support Bluetooth so let the user know and exit.
             if (bluetoothAdapter == null) {
@@ -128,27 +74,18 @@ public class BluetoothActivity extends AppCompatActivity {
 
             if (!bluetoothAdapter.isEnabled()) {    //check bluetooth enable
                 Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBT, REQUEST_ENABLE_BT);
+                startActivityForResult(enableBT, REQUEST_ENABLE_BT);    //This here the code is for bluetooth initialization
+            } else {
+                Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+                ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
+
             }
-            //This here the code is for bluetooth initialization
 
             findViewById(R.id.showSearched_B).setOnClickListener(new View.OnClickListener() {   //button to search for devices
                 @Override
                 public void onClick(View v) {
-
                     Log.d(TAG, "onClick: ");
-
-                    //This here code is for filtering out the activities done by a device bluetooth
-                    IntentFilter filter = new IntentFilter();
-                    filter.addAction(BluetoothDevice.ACTION_FOUND);
-                    filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-                    registerReceiver(broadcastReceiver, filter);
-                    //This here code is for filtering out the activities done by a device bluetooth
-
-                    nearbyDeviceModelArrayList = new ArrayList<DeviceModel>();  //An array for storing found devices
-
-                    bluetoothAdapter.setName(currentUserModel.getUserID());   //here I have to assign a unique identifier to be linked with the number
-                    bluetoothAdapter.startDiscovery();  //This function is self explanatory, it basically start the intent which we describe above
+                    showSearchedDevices();
                 }
             });
 
@@ -165,24 +102,9 @@ public class BluetoothActivity extends AppCompatActivity {
         }
 
     }
-    //This method is all about bluetooh, here it is filtering out devices whose type is 2, and assigning them to the array mentioned above, and calling a method to update firebase realtime db
 
-    //This function is responsible for updating the local DB, for logged in user, and adding child to node nearbyDevices
-    void updateNearbyList() {
-
-        for (DeviceModel deviceModel : nearbyDeviceModelArrayList) {
-            Log.d(TAG, ": " + deviceModel.toString());
-            try {
-                boolean isInserted = nearByDeviceDBHelper.insertData(deviceModel.getDeviceID(), deviceModel.getLoggedTime());
-                if (isInserted == true)
-                    Log.d(TAG, "updateNearbyList: Data Inserted");
-                else {
-                    Log.d(TAG, "updateNearbyList: Data not Inserted");
-                }
-            } catch (Exception ex) {
-                Log.d(TAG, "updateNearbyList: " + ex.getMessage());
-            }
-        }
+    //This function is responsible for testing, showing searched devices
+    void showSearchedDevices() {
 
         Cursor res = nearByDeviceDBHelper.getAllData();
         if (res.getCount() == 0) {
@@ -210,6 +132,9 @@ public class BluetoothActivity extends AppCompatActivity {
         if (requestCode == REQUEST_ENABLE_BT) {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(getApplicationContext(), "Enabled", Toast.LENGTH_SHORT).show();
+
+                Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+                ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
             }
         }
     }
@@ -262,33 +187,29 @@ public class BluetoothActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        try {
-            unregisterReceiver(broadcastReceiver);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
     //This method is used for clearing out the bluetooth receiver
 
-    //The methods below from this line are those which are called on different points of activity lifecycle, here it is used for keeping the device a unique
+    //The methods below from this line are those which are called on different points of activity lifecycle,
     @Override
     protected void onStop() {
+        Log.d(TAG, "onStop: ");
         super.onStop();
-        bluetoothAdapter.setName(currentUserModel.getUserID());   //here I have to assign a unique identifier to be linked with the number
     }
 
     @Override
     protected void onPostResume() {
+        Log.d(TAG, "onPostResume: ");
         super.onPostResume();
-        bluetoothAdapter.setName(currentUserModel.getUserID());   //here I have to assign a unique identifier to be linked with the number
     }
 
     @Override
     protected void onResume() {
+        Log.d(TAG, "onResume: ");
         super.onResume();
-        bluetoothAdapter.setName(currentUserModel.getUserID());   //here I have to assign a unique identifier to be linked with the number
+
     }
-    //The methods below from this line are those which are called on different points of activity lifecycle, here it is used for keeping the device a unique
+    //The methods below from this line are those which are called on different points of activity lifecycle,
 
     public boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this,

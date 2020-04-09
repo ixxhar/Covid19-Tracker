@@ -190,6 +190,7 @@ public class AuthenticationActivity extends AppCompatActivity {
                                         UserModel userModel = new UserModel();
                                         userModel.setUserID(userReference.getKey());
                                         userModel.setUserPhoneNumber(phoneNumber);
+                                        userModel.setSendDataPermission("false");
                                         databaseReference.child("Users").child(userReference.getKey()).setValue(userModel);
                                     }
                                     //Here is a bit of a logic for checking number if it was registered before, so there is no need for creating a new unique ID

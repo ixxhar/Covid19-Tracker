@@ -1,7 +1,15 @@
 package com.ixxhar.covid19tracker.modelclass;
 
 public class UserModel {
-    private String userPhoneNumber, userID;
+    private String userPhoneNumber, userID, sendDataPermission;
+
+    public String getSendDataPermission() {
+        return sendDataPermission;
+    }
+
+    public void setSendDataPermission(String sendDataPermission) {
+        this.sendDataPermission = sendDataPermission;
+    }
 
     public String getUserPhoneNumber() {
         return userPhoneNumber;
@@ -24,6 +32,7 @@ public class UserModel {
         return "UserModel{" +
                 "userPhoneNumber='" + userPhoneNumber + '\'' +
                 ", userID='" + userID + '\'' +
+                ", sendDataPermission='" + sendDataPermission + '\'' +
                 '}';
     }
 }
