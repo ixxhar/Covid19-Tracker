@@ -13,6 +13,9 @@
    2. Storing nearby devices in Firebase Realtime Database, with the discovery time.
    3. Removed functionality of storing nearby devices in fire base.
    4. Added functionality of searching for devices only using our application.
+   5. Added functionality of running bluetooth discovery in the foreground.
+   6. Foreground service active untill bluetooth is enabled.
+   7. Users are notified that our app is running.
   
 3. SQLite functionality has been added.
    1. Storinng found devices in local database, with their IDs and Logged time.
@@ -21,3 +24,4 @@
 
 5. Sending user data via email.
    1. Deleting old csv file generated, creating new csv file and attaching it with hard coded email address.
+   2. Users are now able to send their data only when authorized by the admin.
