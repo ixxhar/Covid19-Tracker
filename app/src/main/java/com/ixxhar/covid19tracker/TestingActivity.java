@@ -4,17 +4,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class TestingActivity extends AppCompatActivity {
@@ -25,7 +19,6 @@ public class TestingActivity extends AppCompatActivity {
     private TextView textViewOne;
 
     private DatabaseReference databaseReference;
-    private Button buttonOne;
     private String USER_ID;
 
     @Override
@@ -35,9 +28,6 @@ public class TestingActivity extends AppCompatActivity {
 
         editTextOne = (EditText) findViewById(R.id.editTextOne_ET);
         textViewOne = (TextView) findViewById(R.id.textViewOne_TV);
-        buttonOne = (Button) findViewById(R.id.one_B);
-
-        buttonOne.setVisibility(View.INVISIBLE);
 
         //This here is the code for getting data of logged in user
         SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
@@ -46,20 +36,9 @@ public class TestingActivity extends AppCompatActivity {
 
         Log.d(TAG, "onCreate: " + USER_ID);
 
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.child("Users").child(USER_ID).child("sendDataPermission").addValueEventListener(new ValueEventListener() {
+        findViewById(R.id.one_B).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.d(TAG, "onDataChange: " + dataSnapshot.getValue());
-                if (dataSnapshot.getValue().toString() == "true") {
-                    buttonOne.setVisibility(View.VISIBLE);
-                } else {
-                    buttonOne.setVisibility(View.INVISIBLE);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onClick(View v) {
 
             }
         });

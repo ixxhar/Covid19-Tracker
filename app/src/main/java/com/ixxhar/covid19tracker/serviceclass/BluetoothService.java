@@ -34,10 +34,11 @@ public class BluetoothService extends Service {
     private BluetoothAdapter bluetoothAdapter;  //This here is instantiation of bluetooth adapter,
     private NearByDeviceDBHelper nearByDeviceDBHelper;  //class responsible for creating local database
     //This method is all about bluetooth, here it is filtering out devices whose we assigned IDs, and assigning them to the array mentioned above, and calling a method to update firebase realtime db
+    private String bluetoothOriginalName;
+
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            nearbyDeviceModelArrayList = new ArrayList<DeviceModel>();  //An array for storing found devices
 
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_FOUND.equals((action))) {    //This check the intent whether it has found a device or not
@@ -46,6 +47,8 @@ public class BluetoothService extends Service {
                 Log.d(TAG, "ACTION_FOUND: " + device.getName() + " " + device.getAddress() + " " + device.getType());
 
                 if (device.getName() != null && device.getName().startsWith("-")) {
+                    nearbyDeviceModelArrayList = new ArrayList<DeviceModel>();  //An array for storing found devices
+
                     deviceModel = new DeviceModel();
                     deviceModel.setDeviceID(device.getName());
                     deviceModel.setLoggedTime(String.valueOf(Calendar.getInstance().getTime()));
@@ -78,8 +81,13 @@ public class BluetoothService extends Service {
     public void onCreate() {
         Log.d(TAG, "onCreate: ");
 
+        nearByDeviceDBHelper = new NearByDeviceDBHelper(this);  //initializing DB
+
         //This here the code is for bluetooth initialization
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        //Assign original name of bluetooth
+        bluetoothOriginalName = bluetoothAdapter.getName();
 
         //This here is the code for getting data of logged in user
         SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
@@ -139,6 +147,7 @@ public class BluetoothService extends Service {
     public void onDestroy() {
         Log.d(TAG, "onDestroy: ");
         try {
+            bluetoothAdapter.setName(bluetoothOriginalName);
             unregisterReceiver(broadcastReceiver);
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,6 +163,8 @@ public class BluetoothService extends Service {
     }
 
     private void bluetoothNotEnabledNotification() {
+        bluetoothAdapter.setName(bluetoothOriginalName);
+
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
@@ -173,6 +184,7 @@ public class BluetoothService extends Service {
 
     //This function is responsible for updating the local DB, for logged in user, and adding child to node nearbyDevices
     private void updateNearbyList() {
+        Log.d(TAG, "updateNearbyList: " + nearbyDeviceModelArrayList.size());
 
         for (DeviceModel deviceModel : nearbyDeviceModelArrayList) {
             Log.d(TAG, ": " + deviceModel.toString());

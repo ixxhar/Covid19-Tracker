@@ -1,8 +1,10 @@
 package com.ixxhar.covid19tracker;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,6 +19,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
 import com.ixxhar.covid19tracker.serviceclass.BluetoothService;
+
+import java.util.List;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -76,8 +80,10 @@ public class BluetoothActivity extends AppCompatActivity {
                 Intent enableBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBT, REQUEST_ENABLE_BT);    //This here the code is for bluetooth initialization
             } else {
-                Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
-                ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
+                if (!isServiceRunning()) {
+                    Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+                    ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
+                }
 
             }
 
@@ -101,6 +107,25 @@ public class BluetoothActivity extends AppCompatActivity {
             finish();
         }
 
+    }
+
+    //This function check if the service is running
+    private boolean isServiceRunning() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningServiceInfo> serviceList = activityManager.getRunningServices(Integer.MAX_VALUE);
+
+        if (serviceList.size() <= 0) {
+            return false;
+        }
+        for (int i = 0; i < serviceList.size(); i++) {
+            ActivityManager.RunningServiceInfo serviceInfo = serviceList.get(i);
+            ComponentName serviceName = serviceInfo.service;
+            if (serviceName.getClassName().equals(BluetoothService.class.getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     //This function is responsible for testing, showing searched devices
