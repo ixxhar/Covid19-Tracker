@@ -10,7 +10,7 @@
 
 2. Bluetooth discovery of nearby users
    1. Asking users for location and bluetooth permission
-   2. Storing nearby devices in Firebase Realtime Database, with the discovery time.
+   2. ~~Storing nearby devices in Firebase Realtime Database, with the discovery time.~~
    3. Removed functionality of storing nearby devices in fire base.
    4. Added functionality of searching for devices only using our application.
    5. Added functionality of running bluetooth discovery in the foreground.
@@ -24,4 +24,5 @@
 
 5. Sending user data via email.
    1. Deleting old csv file generated, creating new csv file and attaching it with hard coded email address.
-   2. Users are now able to send their data only when authorized by the admin.
+   2. ~~Users are now able to send their data only when authorized by the admin.~~
+   3. Users will now upload the generated csv to Firebase Storage, instead of sending via email address.
