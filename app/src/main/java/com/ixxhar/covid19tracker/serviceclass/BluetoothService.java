@@ -19,7 +19,6 @@ import com.ixxhar.covid19tracker.R;
 import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
 import com.ixxhar.covid19tracker.modelclass.DeviceModel;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 
 import androidx.annotation.Nullable;
@@ -30,7 +29,7 @@ import static com.ixxhar.covid19tracker.App.CHANNEL_ID;
 public class BluetoothService extends Service {
     private static final String TAG = "BluetoothService";
     private static final String MY_PREFS_NAME = "MyPrefsFile";  // This here is a constant used for Shared Preferences,
-    ArrayList<DeviceModel> nearbyDeviceModelArrayList;  //This here is an array which is used for storing nearby devices that are found by Bluetooth.
+    //    ArrayList<DeviceModel> nearbyDeviceModelArrayList;  //This here is an array which is used for storing nearby devices that are found by Bluetooth.
     private BluetoothAdapter bluetoothAdapter;  //This here is instantiation of bluetooth adapter,
     private NearByDeviceDBHelper nearByDeviceDBHelper;  //class responsible for creating local database
     //This method is all about bluetooth, here it is filtering out devices whose we assigned IDs, and assigning them to the array mentioned above, and calling a method to update firebase realtime db
@@ -47,16 +46,28 @@ public class BluetoothService extends Service {
                 Log.d(TAG, "ACTION_FOUND: " + device.getName() + " " + device.getAddress() + " " + device.getType());
 
                 if (device.getName() != null && device.getName().startsWith("-")) {
-                    nearbyDeviceModelArrayList = new ArrayList<DeviceModel>();  //An array for storing found devices
+                    //nearbyDeviceModelArrayList = new ArrayList<DeviceModel>();  //An array for storing found devices
 
                     deviceModel = new DeviceModel();
                     deviceModel.setDeviceID(device.getName());
                     deviceModel.setLoggedTime(String.valueOf(Calendar.getInstance().getTime()));
-                    nearbyDeviceModelArrayList.add(deviceModel);
+                    //nearbyDeviceModelArrayList.add(deviceModel);
+
+                    try {
+                        boolean isInserted = nearByDeviceDBHelper.insertData(deviceModel.getDeviceID(), deviceModel.getLoggedTime());
+                        if (isInserted == true)
+                            Log.d(TAG, "updateNearbyList: Data Inserted");
+                        else {
+                            Log.d(TAG, "updateNearbyList: Data not Inserted");
+                        }
+                    } catch (Exception ex) {
+                        Log.d(TAG, "updateNearbyList: " + ex.getMessage());
+                    }
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                Log.d(TAG, "onReceive: ACTION_DISCOVERY_FINISHED " + nearbyDeviceModelArrayList.size()); //This checks whether the scanning is finished.
-                updateNearbyList();
+                Log.d(TAG, "onReceive: ACTION_DISCOVERY_FINISHED");
+//                Log.d(TAG, "onReceive: ACTION_DISCOVERY_FINISHED " + nearbyDeviceModelArrayList.size()); //This checks whether the scanning is finished.
+//                updateNearbyList();
 
                 new CountDownTimer(10000, 1000) {
                     public void onTick(long millisUntilFinished) {
@@ -183,22 +194,22 @@ public class BluetoothService extends Service {
     //This function is responsible for updating the local DB, for logged in user, and adding child to node nearbyDevices
 
     //This function is responsible for updating the local DB, for logged in user, and adding child to node nearbyDevices
-    private void updateNearbyList() {
-        Log.d(TAG, "updateNearbyList: " + nearbyDeviceModelArrayList.size());
-
-        for (DeviceModel deviceModel : nearbyDeviceModelArrayList) {
-            Log.d(TAG, ": " + deviceModel.toString());
-            try {
-                boolean isInserted = nearByDeviceDBHelper.insertData(deviceModel.getDeviceID(), deviceModel.getLoggedTime());
-                if (isInserted == true)
-                    Log.d(TAG, "updateNearbyList: Data Inserted");
-                else {
-                    Log.d(TAG, "updateNearbyList: Data not Inserted");
-                }
-            } catch (Exception ex) {
-                Log.d(TAG, "updateNearbyList: " + ex.getMessage());
-            }
-        }
-    }
+//    private void updateNearbyList() {
+//        Log.d(TAG, "updateNearbyList: " + nearbyDeviceModelArrayList.size());
+//
+//        for (DeviceModel deviceModel : nearbyDeviceModelArrayList) {
+//            Log.d(TAG, ": " + deviceModel.toString());
+//            try {
+//                boolean isInserted = nearByDeviceDBHelper.insertData(deviceModel.getDeviceID(), deviceModel.getLoggedTime());
+//                if (isInserted == true)
+//                    Log.d(TAG, "updateNearbyList: Data Inserted");
+//                else {
+//                    Log.d(TAG, "updateNearbyList: Data not Inserted");
+//                }
+//            } catch (Exception ex) {
+//                Log.d(TAG, "updateNearbyList: " + ex.getMessage());
+//            }
+//        }
+//    }
 
 }

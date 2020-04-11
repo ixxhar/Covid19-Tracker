@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -22,6 +24,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.ixxhar.covid19tracker.helperclass.CSVFileWriter;
 import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
 
@@ -51,6 +56,9 @@ public class SendDataActivity extends AppCompatActivity {
     private Button sendDataButton;
     private String USER_ID;
     private DatabaseReference databaseReference;
+    StorageReference storageReference;
+
+    private boolean granted = false;
 
 
     @Override
@@ -61,10 +69,10 @@ public class SendDataActivity extends AppCompatActivity {
         // This here is the initilization of firebase services,
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
+        storageReference = FirebaseStorage.getInstance().getReference();
         // This here is the initilization of firebase services,
 
         sendDataButton = (Button) findViewById(R.id.sendData_B);
-        sendDataButton.setVisibility(View.INVISIBLE);
 
         //This here is the code for getting data of logged in user
         SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
@@ -73,15 +81,31 @@ public class SendDataActivity extends AppCompatActivity {
 
         if (currentUser != null) {
 
+            granted = checkReadWritePermission();
             databaseReference = FirebaseDatabase.getInstance().getReference();
             databaseReference.child("Users").child(USER_ID).child("sendDataPermission").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Log.d(TAG, "onDataChange: " + dataSnapshot.getValue());
                     if (dataSnapshot.getValue().equals("true")) {
-                        sendDataButton.setVisibility(View.VISIBLE);
+                        sendDataButton.setEnabled(true);
+                        sendDataButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (granted) {
+                                    if (generateCSVFileFromSQLiteDB()) {
+                                        uploadCSV();
+                                    } else {
+                                        Log.d(TAG, "onClick: nothing to generate csv from");
+                                    }
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Grant Permission", Toast.LENGTH_SHORT).show();
+                                }
+
+                            }
+                        });
                     } else {
-                        sendDataButton.setVisibility(View.INVISIBLE);
+                        sendDataButton.setEnabled(false);
                     }
                 }
 
@@ -91,20 +115,6 @@ public class SendDataActivity extends AppCompatActivity {
                 }
             });
 
-            sendDataButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    boolean granted = checkReadWritePermission();
-                    if (granted) {
-                        deleteGeneratedCSVFile();
-                        generateCSVFileFromSQLiteDB();
-                        sendCSVviaEmail();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Grant Permission", Toast.LENGTH_SHORT).show();
-                    }
-
-                }
-            });
         } else {
             startActivity(new Intent(this, AuthenticationActivity.class));
             finish();
@@ -112,26 +122,43 @@ public class SendDataActivity extends AppCompatActivity {
 
     }
 
-    private void sendCSVviaEmail() {
-        Intent i = new Intent(Intent.ACTION_SEND);
-        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"ixxhar@gmail.com"});
-        i.putExtra(Intent.EXTRA_SUBJECT, "Sending Data of " + currentUser.getPhoneNumber());
-        i.putExtra(Intent.EXTRA_TEXT, "This email contain data for user mentioned in the subject!");
-        Uri uri = FileProvider.getUriForFile(getApplicationContext(), "com.ixxhar.covid19tracker.provider", new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/test.csv"));
-        i.putExtra(Intent.EXTRA_STREAM, uri);
-        i.setType("message/rfc822");
+    private void uploadCSV() {
+//        Intent i = new Intent(Intent.ACTION_SEND);
+//        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"ixxhar@gmail.com"});
+//        i.putExtra(Intent.EXTRA_SUBJECT, "Sending Data of " + currentUser.getPhoneNumber());
+//        i.putExtra(Intent.EXTRA_TEXT, "This email contain data for user mentioned in the subject!");
+        Uri uri = FileProvider.getUriForFile(getApplicationContext(), "com.ixxhar.covid19tracker.provider", new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + USER_ID + ".csv"));
+//        i.putExtra(Intent.EXTRA_STREAM, uri);
+//        i.setType("message/rfc822");
+//
+//        startActivity(i);
 
-        startActivity(i);
+
+        storageReference.child("sentData" + "/" + USER_ID + ".csv").putFile(uri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if (task.isSuccessful()) {
+                    Toast.makeText(getApplicationContext(), "Data Sent Successfully", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "onComplete: success");
+                    sendDataButton.setEnabled(false);
+                } else {
+                    Log.d(TAG, "notComplete: " + task.getException());
+                }
+            }
+        });
+
     }
 
     private boolean generateCSVFileFromSQLiteDB() {
         Log.d(TAG, "generateCSVFileFromSQLiteDB: ");
 
+        deleteGeneratedCSVFile();
+
         nearByDeviceDBHelper = new NearByDeviceDBHelper(this);
 
         filePath = new StringBuffer();
-        filePath.append(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/test.csv");
+        filePath.append(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + USER_ID + ".csv");
         file = new File(filePath.toString());
 
         csv = new CSVFileWriter(file);
@@ -158,12 +185,12 @@ public class SendDataActivity extends AppCompatActivity {
     private boolean deleteGeneratedCSVFile() {
         Log.d(TAG, "deleteGeneratedCSVFile: ");
 
-        File fdelete = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/test.csv");
+        File fdelete = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + USER_ID + ".csv");
         if (fdelete.exists()) {
             if (fdelete.delete()) {
-                Log.d(TAG, "file Deleted: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/test.csv");
+                Log.d(TAG, "file Deleted: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + USER_ID + ".csv");
             } else {
-                Log.d(TAG, "file not Deleted: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/test.csv");
+                Log.d(TAG, "file not Deleted: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + USER_ID + ".csv");
             }
             return true;
         } else {
@@ -209,5 +236,6 @@ public class SendDataActivity extends AppCompatActivity {
         } else {
             return true;
         }
+
     }
 }
