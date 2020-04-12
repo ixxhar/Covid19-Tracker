@@ -16,6 +16,7 @@
    5. Added functionality of running bluetooth discovery in the foreground.
    6. Foreground service active untill bluetooth is enabled.
    7. Users are notified that our app is running.
+   8. BLE feature has been added, which is now our default mechanism for searching devices nearby.
   
 3. SQLite functionality has been added.
    1. Storinng found devices in local database, with their IDs and Logged time.
