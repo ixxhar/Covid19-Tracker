@@ -73,6 +73,7 @@ public class SendDataActivity extends AppCompatActivity {
         // This here is the initilization of firebase services,
 
         sendDataButton = (Button) findViewById(R.id.sendData_B);
+        sendDataButton.setEnabled(false);
 
         //This here is the code for getting data of logged in user
         SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
@@ -123,17 +124,7 @@ public class SendDataActivity extends AppCompatActivity {
     }
 
     private void uploadCSV() {
-//        Intent i = new Intent(Intent.ACTION_SEND);
-//        i.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//        i.putExtra(Intent.EXTRA_EMAIL, new String[]{"ixxhar@gmail.com"});
-//        i.putExtra(Intent.EXTRA_SUBJECT, "Sending Data of " + currentUser.getPhoneNumber());
-//        i.putExtra(Intent.EXTRA_TEXT, "This email contain data for user mentioned in the subject!");
         Uri uri = FileProvider.getUriForFile(getApplicationContext(), "com.ixxhar.covid19tracker.provider", new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + USER_ID + ".csv"));
-//        i.putExtra(Intent.EXTRA_STREAM, uri);
-//        i.setType("message/rfc822");
-//
-//        startActivity(i);
-
 
         storageReference.child("sentData" + "/" + USER_ID + ".csv").putFile(uri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -142,6 +133,7 @@ public class SendDataActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Data Sent Successfully", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "onComplete: success");
                     sendDataButton.setEnabled(false);
+                    deleteGeneratedCSVFile();
                 } else {
                     Log.d(TAG, "notComplete: " + task.getException());
                 }

@@ -180,7 +180,7 @@ public class BluetoothService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)    //for some reason it does not display what I want
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Bluetooth Permission")
                 .setContentText("Enable Bluetooth, Try Again!")
                 .setSmallIcon(R.drawable.common_google_signin_btn_icon_dark_focused)

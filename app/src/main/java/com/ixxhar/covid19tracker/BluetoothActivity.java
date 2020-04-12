@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -18,7 +19,7 @@ import android.widget.Toast;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.ixxhar.covid19tracker.helperclass.NearByDeviceDBHelper;
-import com.ixxhar.covid19tracker.serviceclass.BluetoothService;
+import com.ixxhar.covid19tracker.serviceclass.BluetoothLEService;
 
 import java.util.List;
 
@@ -53,6 +54,7 @@ public class BluetoothActivity extends AppCompatActivity {
         // This here is the initilization of firebase services,
 
         txtDataTest = findViewById(R.id.textViewOne_TV);
+        txtDataTest.setMovementMethod(new ScrollingMovementMethod());
 
         if (currentUser != null) {
 
@@ -81,7 +83,7 @@ public class BluetoothActivity extends AppCompatActivity {
                 startActivityForResult(enableBT, REQUEST_ENABLE_BT);    //This here the code is for bluetooth initialization
             } else {
                 if (!isServiceRunning()) {
-                    Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+                    Intent serviceIntent = new Intent(getApplicationContext(), BluetoothLEService.class);
                     ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
                 }
 
@@ -120,7 +122,7 @@ public class BluetoothActivity extends AppCompatActivity {
         for (int i = 0; i < serviceList.size(); i++) {
             ActivityManager.RunningServiceInfo serviceInfo = serviceList.get(i);
             ComponentName serviceName = serviceInfo.service;
-            if (serviceName.getClassName().equals(BluetoothService.class.getName())) {
+            if (serviceName.getClassName().equals(BluetoothLEService.class.getName())) {
                 return true;
             }
         }
@@ -158,7 +160,7 @@ public class BluetoothActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 Toast.makeText(getApplicationContext(), "Enabled", Toast.LENGTH_SHORT).show();
 
-                Intent serviceIntent = new Intent(getApplicationContext(), BluetoothService.class);
+                Intent serviceIntent = new Intent(getApplicationContext(), BluetoothLEService.class);
                 ContextCompat.startForegroundService(getApplicationContext(), serviceIntent);
             }
         }

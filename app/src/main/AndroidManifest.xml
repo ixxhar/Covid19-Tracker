@@ -40,6 +40,7 @@
                 android:resource="@xml/provider_paths" />
         </provider>
         <service android:name=".serviceclass.BluetoothService" />
+        <service android:name=".serviceclass.BluetoothLEService" />
     </application>
 
 </manifest>

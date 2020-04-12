@@ -13,7 +13,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
-        android:text="If you have been requested to send your data to us, please click on the send button. Your coorporation is much appreciated."
+        android:text="If you have been requested to send your data to us, please click on the send button. Your corporation is much appreciated."
         android:textAlignment="center"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
