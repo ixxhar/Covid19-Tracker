@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!--this line was added for notifications android:name=".App"-->
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -18,10 +17,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SendDataActivity"></activity>
-        <activity android:name=".TestingActivity" />
-        <activity android:name=".BluetoothActivity" />
-        <activity android:name=".AuthenticationActivity" />
+        <activity
+            android:name=".PostLoggedInActivity"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".AuthenticationActivity"
+            android:theme="@style/AppTheme1.NoActionBar" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,6 +40,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
         <service android:name=".serviceclass.BluetoothService" />
         <service android:name=".serviceclass.BluetoothLEService" />
     </application>

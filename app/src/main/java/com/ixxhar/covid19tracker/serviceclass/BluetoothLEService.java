@@ -165,15 +165,26 @@ public class BluetoothLEService extends Service {
             public void run() {
                 // stop scanning here
                 try {
-                    DeviceUtil.stopScanning(mBluetoothLeScanner, mScanCallback);
-                    DeviceUtil.stopAdvertising(mBluetoothLeAdvertiser, mAdvertiseCallback);
+
+                    if (mBluetoothAdapter.isEnabled()) {
+                        DeviceUtil.stopScanning(mBluetoothLeScanner, mScanCallback);
+                        DeviceUtil.stopAdvertising(mBluetoothLeAdvertiser, mAdvertiseCallback);
+                    } else {
+                        bluetoothNotEnabledNotification();
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
 
                 new CountDownTimer(BROADCASTING_PERIOD, 1000) {
                     public void onTick(long millisUntilFinished) {
-                        Log.d(TAG, "onTick: Seconds remaining: " + millisUntilFinished / 1000);
+                        if (mBluetoothAdapter.isEnabled()) {
+                            Log.d(TAG, "onTick: Seconds remaining: " + millisUntilFinished / 1000);
+                        } else {
+                            bluetoothNotEnabledNotification();
+                            return;
+                        }
                     }
 
                     public void onFinish() {

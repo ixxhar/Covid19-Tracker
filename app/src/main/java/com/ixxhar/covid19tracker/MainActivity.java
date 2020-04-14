@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, AuthenticationActivity.class));
             finish();
         } else {
-            startActivity(new Intent(MainActivity.this, BluetoothActivity.class));
+            startActivity(new Intent(MainActivity.this, PostLoggedInActivity.class));
             finish();
         }
 
