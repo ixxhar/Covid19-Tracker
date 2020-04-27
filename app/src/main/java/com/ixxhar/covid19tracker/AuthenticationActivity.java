@@ -32,6 +32,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.ixxhar.covid19tracker.modelclass.UserModel;
 
 import java.util.ArrayList;
@@ -69,7 +71,7 @@ public class AuthenticationActivity extends AppCompatActivity implements View.On
             "39", "58", "84", "681", "967", "260", "263"};
     RelativeLayout codePhone_RL, moreInfoSubmit_RL, otp_RL, confirmOTP_RL, authenticationActivity_RL;
     private TextInputEditText phoneET, otpET;
-    private String phoneNumber, countryCode, otpNumber;
+    private String phoneNumber, countryCode, otpNumber, notificationToken;
     private Button submitPhone_B, submitOTP_B, moreInfo_B;
     private TextView signininfoString_TV, otptimeout_TV;
 
@@ -178,6 +180,68 @@ public class AuthenticationActivity extends AppCompatActivity implements View.On
         countryCode_ACTV.setDropDownHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         countryCode_ACTV.setOnItemClickListener(this);
 
+        //Generating token for Notification
+        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() { //this code is used for generating token for devices to send them notification, and make them specific.
+            @Override
+            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                if (task.isSuccessful()) {
+                    notificationToken = task.getResult().getToken();
+                    Log.d(TAG, "onComplete: " + notificationToken);
+                }
+            }
+        });
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.moreInfo_B:
+                Log.d(TAG, "onClick: moreInfo_B");
+                moreInfo();
+                break;
+
+            case R.id.submitPhone_B:
+                Log.d(TAG, "onClick: submitPhone_B ");
+
+                phoneNumber = String.valueOf(phoneET.getText());
+                if (phoneNumber.isEmpty() || countryCode == null) {
+                    phoneET.setError("Invalid Phone Number");
+                    Log.d(TAG, "Invalid Phone Number");
+                } else {
+                    phoneNumber = "+" + countryCode + phoneNumber;
+                    Log.d(TAG, "Valid Phone Number " + phoneNumber);
+
+                    codePhone_RL.setVisibility(View.INVISIBLE);
+                    moreInfoSubmit_RL.setVisibility(View.INVISIBLE);
+
+                    otp_RL.setVisibility(View.VISIBLE);
+                    confirmOTP_RL.setVisibility(View.VISIBLE);
+
+                    signininfoString_TV.setText("Enter Received OTP " + phoneNumber);
+
+                    sendVerificationode(phoneNumber);   //Method called for verification of phone
+                }
+
+                break;
+
+            case R.id.submitOTP_B:
+                Log.d(TAG, "onClick: submitOTP_B");
+
+                otpNumber = String.valueOf(otpET.getText());
+                if (otpNumber.isEmpty() || otpNumber.length() < 6) {
+                    Log.d(TAG, "Invalid OTP Number");
+                    otpET.setError("Invalid OTP Number");
+                } else {
+                    Log.d(TAG, "Valid OTP Number: " + otpNumber);
+
+                    verifySignInCode(otpNumber);    //method called once recieved OTP code
+                }
+                break;
+
+            default:
+
+        }
     }
 
     private void verifySignInCode(String otpNumber) {
@@ -234,6 +298,7 @@ public class AuthenticationActivity extends AppCompatActivity implements View.On
                                         editor.putString("userphone", phoneNumber);
                                         editor.putString("userid", userFound.getUserID());
                                         editor.apply();
+                                        databaseReference.child("Users").child(userFound.getUserID()).child("notificationToken").setValue(notificationToken);
                                     } else {
                                         DatabaseReference userReference = databaseReference.push();
                                         SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
@@ -245,6 +310,7 @@ public class AuthenticationActivity extends AppCompatActivity implements View.On
                                         userModel.setUserID(userReference.getKey());
                                         userModel.setUserPhoneNumber(phoneNumber);
                                         userModel.setSendDataPermission("false");
+                                        userModel.setNotificationToken(notificationToken);
                                         databaseReference.child("Users").child(userReference.getKey()).setValue(userModel);
                                     }
                                     //Here is a bit of a logic for checking number if it was registered before, so there is no need for creating a new unique ID
@@ -273,57 +339,6 @@ public class AuthenticationActivity extends AppCompatActivity implements View.On
                         }
                     }
                 });
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.moreInfo_B:
-                Log.d(TAG, "onClick: moreInfo_B");
-                moreInfo();
-                break;
-
-            case R.id.submitPhone_B:
-                Log.d(TAG, "onClick: submitPhone_B ");
-
-                phoneNumber = String.valueOf(phoneET.getText());
-                if (phoneNumber.isEmpty() || countryCode == null) {
-                    phoneET.setError("Invalid Phone Number");
-                    Log.d(TAG, "Invalid Phone Number");
-                } else {
-                    phoneNumber = "+" + countryCode + phoneNumber;
-                    Log.d(TAG, "Valid Phone Number " + phoneNumber);
-
-                    codePhone_RL.setVisibility(View.INVISIBLE);
-                    moreInfoSubmit_RL.setVisibility(View.INVISIBLE);
-
-                    otp_RL.setVisibility(View.VISIBLE);
-                    confirmOTP_RL.setVisibility(View.VISIBLE);
-
-                    signininfoString_TV.setText("Enter Received OTP " + phoneNumber);
-
-                    sendVerificationode(phoneNumber);   //Method called for verification of phone
-                }
-
-                break;
-
-            case R.id.submitOTP_B:
-                Log.d(TAG, "onClick: submitOTP_B");
-
-                otpNumber = String.valueOf(otpET.getText());
-                if (otpNumber.isEmpty() || otpNumber.length() < 6) {
-                    Log.d(TAG, "Invalid OTP Number");
-                    otpET.setError("Invalid OTP Number");
-                } else {
-                    Log.d(TAG, "Valid OTP Number: " + otpNumber);
-
-                    verifySignInCode(otpNumber);    //method called once recieved OTP code
-                }
-                break;
-
-            default:
-
-        }
     }
 
     public void readDataOnce(final OnGetDataListener listener) {

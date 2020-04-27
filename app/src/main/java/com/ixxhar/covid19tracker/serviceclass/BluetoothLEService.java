@@ -218,7 +218,7 @@ public class BluetoothLEService extends Service {
         stopSelf();
     }
 
-    private void updateScanResult(ScanRecord record) {
+    private void updateScanResult(ScanRecord record) {  //This method is used for storing found packet data in local DB.
 
         //Extract our custom temp value
         byte[] customData = record.getManufacturerSpecificData(DeviceUtil.MANUFACTURER_COVID19TRACKER);

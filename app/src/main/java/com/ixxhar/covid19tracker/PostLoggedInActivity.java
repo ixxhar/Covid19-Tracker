@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,10 +15,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.ixxhar.covid19tracker.serviceclass.BluetoothLEService;
 import com.ixxhar.covid19tracker.ui.HomeFragment;
 import com.ixxhar.covid19tracker.ui.LoggedDataFragment;
@@ -44,7 +48,11 @@ public class PostLoggedInActivity extends AppCompatActivity implements Navigatio
     private NavigationView navigationView;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser currentUser;
-    private BluetoothAdapter bluetoothAdapter;  //This here is instantiation of bluetooth adapter,
+    private static final String MY_PREFS_NAME = "MyPrefsFile";
+    private static final String COVID19TRACKER_NEWS_CHANNEL = "covid19tracker-news";
+    private BluetoothAdapter bluetoothAdapter;
+    private SharedPreferences.Editor editor;
+    private SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +78,11 @@ public class PostLoggedInActivity extends AppCompatActivity implements Navigatio
 
         View headerView = navigationView.getHeaderView(0);
         headPhoneNumber_TV = (TextView) headerView.findViewById(R.id.headPhoneNumber_TV);
+
+        editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+        SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+        boolean isSubscribedToNews = prefs.getBoolean("isSubscribedToNews", false);
+        subscribedToNews(isSubscribedToNews);   //to check whether user already subscribed to the news
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
@@ -255,5 +268,26 @@ public class PostLoggedInActivity extends AppCompatActivity implements Navigatio
         }
 
         return false;
+    }
+
+    private void subscribedToNews(boolean isSubscribedToNews) {
+        if (!isSubscribedToNews) {
+            FirebaseMessaging.getInstance().subscribeToTopic(COVID19TRACKER_NEWS_CHANNEL).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "onComplete: isSuccessful()");
+                        editor.putBoolean("isSubscribedToNews", true);
+                        editor.apply();
+
+                        Snackbar.make(drawerLayout, "Subscribed to News Channel",
+                                Snackbar.LENGTH_LONG)
+                                .show();
+                    }
+                }
+            });
+        } else {
+            Log.d(TAG, "subscribedToNews: Already Subscribed!");
+        }
     }
 }

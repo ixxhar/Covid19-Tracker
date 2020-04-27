@@ -1,7 +1,7 @@
 package com.ixxhar.covid19tracker.modelclass;
 
 public class UserModel {
-    private String userPhoneNumber, userID, sendDataPermission;
+    private String userPhoneNumber, userID, sendDataPermission, notificationToken;
 
     public String getSendDataPermission() {
         return sendDataPermission;
@@ -27,12 +27,21 @@ public class UserModel {
         this.userID = userID;
     }
 
+    public String getNotificationToken() {
+        return notificationToken;
+    }
+
+    public void setNotificationToken(String notificationToken) {
+        this.notificationToken = notificationToken;
+    }
+
     @Override
     public String toString() {
         return "UserModel{" +
                 "userPhoneNumber='" + userPhoneNumber + '\'' +
                 ", userID='" + userID + '\'' +
                 ", sendDataPermission='" + sendDataPermission + '\'' +
+                ", notificationToken='" + notificationToken + '\'' +
                 '}';
     }
 }
