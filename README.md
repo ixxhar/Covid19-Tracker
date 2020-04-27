@@ -27,3 +27,7 @@
    1. Deleting old csv file generated, creating new csv file and attaching it with hard coded email address.
    2. ~~Users are now able to send their data only when authorized by the admin.~~
    3. Users will now upload the generated csv to Firebase Storage, instead of sending via email address.
+   
+6. FCM has been integrated into the application for push notification from server.
+   1. Device specific notification can be sent now,
+   2. General Notification to all devices can be sent now.
